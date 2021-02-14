@@ -1,5 +1,9 @@
 package equations;
 
+import java.util.Arrays;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 public class LinearEquationSystem {
     private double[][] coefficients;
     private double[] constantTerms;
@@ -61,6 +65,34 @@ public class LinearEquationSystem {
         }
 
         return triangularMatrix;
+    }
+
+    public double calcDetForTriangular() {
+        return IntStream.range(0, dim).mapToDouble(i -> coefficients[i][i]).reduce(1, (a, b) -> a * b);
+    }
+
+    public double[] calcRoots() {
+        double[] roots = new double[dim];
+        for (int i = dim-1; i >= 0; i--) {
+            double s = 0;
+            for (int j = i+1; j < dim; j++) {
+                s += coefficients[i][j] * roots[j];
+            }
+            roots[i] = (constantTerms[i] - s) / coefficients[i][i];
+        }
+        return roots;
+    }
+
+    public double[] calcResiduals(double[] roots) {
+        double[] residuals = new double[dim];
+        for (int i = 0; i < dim; i++) {
+            double cur = 0;
+            for (int j = 0; j < dim; j++) {
+                cur +=residuals[i] = coefficients[i][j] * roots[j];
+            }
+            residuals[i] = constantTerms[i] - cur;
+        }
+        return residuals;
     }
 
     private void swapRows(int i, int indexNotZero) {
