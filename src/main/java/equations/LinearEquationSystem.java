@@ -2,7 +2,6 @@ package equations;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class LinearEquationSystem {
     private double[][] coefficients;
@@ -73,9 +72,9 @@ public class LinearEquationSystem {
 
     public double[] calcRoots() {
         double[] roots = new double[dim];
-        for (int i = dim-1; i >= 0; i--) {
+        for (int i = dim - 1; i >= 0; i--) {
             double s = 0;
-            for (int j = i+1; j < dim; j++) {
+            for (int j = i + 1; j < dim; j++) {
                 s += coefficients[i][j] * roots[j];
             }
             roots[i] = (constantTerms[i] - s) / coefficients[i][i];
@@ -88,7 +87,7 @@ public class LinearEquationSystem {
         for (int i = 0; i < dim; i++) {
             double cur = 0;
             for (int j = 0; j < dim; j++) {
-                cur +=residuals[i] = coefficients[i][j] * roots[j];
+                cur += residuals[i] = coefficients[i][j] * roots[j];
             }
             residuals[i] = constantTerms[i] - cur;
         }
@@ -112,5 +111,25 @@ public class LinearEquationSystem {
         return -1;
     }
 
+    public NumberOfRoots getNumberOfRootsForTriangular() {
+        int zeroRows = 0;
+        int zeroRowsExt = 0;
+        for (int i = dim - 1; i >= 0; i--) {
+            if (Arrays.stream(coefficients[i]).filter(e -> Double.compare(e, 0) != 0).count() == 0) {
+                zeroRows++;
+                if (Double.compare(constantTerms[i], 0) == 0) {
+                    zeroRowsExt++;
+                }
+            }
+        }
+        final int rank = dim - zeroRows;
+        final int rankExt = dim - zeroRowsExt;
+        if (rank < rankExt) {
+            return NumberOfRoots.NO_ROOTS;
+        } else if (rank < dim) {
+            return NumberOfRoots.INFINITE;
+        }
+        return NumberOfRoots.SINGLE;
+    }
 
 }
