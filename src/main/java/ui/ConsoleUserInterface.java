@@ -118,9 +118,15 @@ public class ConsoleUserInterface {
         final int coefMatrixSize;
         try (Scanner sc = new Scanner(new FileReader(path.toFile()))) {
             try {
-                coefMatrixSize = Integer.parseInt(sc.nextLine());
-                if (coefMatrixSize < 1 || coefMatrixSize > 20) {
-                    writeln("Invalid matrix size. Must be an integer from 1 to 20");
+                if (sc.hasNextLine()) {
+                    coefMatrixSize = Integer.parseInt(sc.nextLine());
+                    if (coefMatrixSize < 1 || coefMatrixSize > 20) {
+                        writeln("Invalid matrix size. Must be an integer from 1 to 20");
+                        return null;
+                    }
+                }
+                else {
+                    writeln("Matrix size not provided");
                     return null;
                 }
             } catch (NumberFormatException e) {
@@ -130,15 +136,21 @@ public class ConsoleUserInterface {
             final int extMatrixSize = coefMatrixSize + 1;
             double[][] matrix = new double[coefMatrixSize][extMatrixSize];
             for (int i = 0; i < coefMatrixSize; i++) {
-                String[] inputAsStringList = sc.nextLine().trim().split("\\s+");
-                if (inputAsStringList.length != extMatrixSize) {
-                    writeln("Wrong number of coefficients in equation " + (i + 1));
-                    return null;
+                if (sc.hasNextLine()) {
+                    String[] inputAsStringList = sc.nextLine().trim().split("\\s+");
+                    if (inputAsStringList.length != extMatrixSize) {
+                        writeln("Wrong number of coefficients in equation " + (i + 1));
+                        return null;
+                    }
+                    try {
+                        matrix[i] = Stream.of(inputAsStringList).mapToDouble(Double::parseDouble).toArray();
+                    } catch (NumberFormatException e) {
+                        writeln("Coefficients must be floating point numbers. Line " + (i + 1));
+                        return null;
+                    }
                 }
-                try {
-                    matrix[i] = Stream.of(inputAsStringList).mapToDouble(Double::parseDouble).toArray();
-                } catch (NumberFormatException e) {
-                    writeln("Coefficients must be floating point numbers. Line " + (i + 1));
+                else {
+                    writeln("Number of equations is incorrect. Expected "+coefMatrixSize);
                     return null;
                 }
             }
