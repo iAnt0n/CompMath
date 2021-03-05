@@ -33,7 +33,7 @@ public class ConsoleUserInterface {
         writer.flush();
     }
 
-    private int readChoice(String[] options, String prompt) {
+    public int readChoice(String[] options, String prompt) {
         writeln(prompt);
         for (int i = 0; i < options.length; i++) {
             writeln(i + ": " + options[i]);
@@ -114,6 +114,7 @@ public class ConsoleUserInterface {
     }
 
     private double[][] readMatrixFromFile() {
+        writeln("Enter filename");
         Path path = Paths.get(scanner.nextLine());
         final int coefMatrixSize;
         try (Scanner sc = new Scanner(new FileReader(path.toFile()))) {
@@ -166,25 +167,11 @@ public class ConsoleUserInterface {
         final int extMatrixSize = coefMatrixSize + 1;
         double[][] matrix = new double[coefMatrixSize][extMatrixSize];
         writeln("Enter a system as\n" +
-                "a1 a2 ... an b1\n" +
+                "a_11 a_12 ... a_1n b_1\n" +
                 "...\n" +
-                "x1 x2 ... xn bn");
+                "a_n1 a_n2 ... a_nn b_n");
         for (int i = 0; i < coefMatrixSize; i++) {
-            double[] row = null;
-            while (row == null) {
-                String[] inputAsStringList = scanner.nextLine().trim().split("\\s+");
-                if (inputAsStringList.length != extMatrixSize) {
-                    writeln("Wrong number of coefficients");
-                    continue;
-                }
-                try {
-                    row = Stream.of(inputAsStringList).mapToDouble(Double::parseDouble).toArray();
-                } catch (NumberFormatException e) {
-                    row = null;
-                    writeln("Coefficients must be floating point numbers");
-                }
-            }
-            matrix[i] = row;
+            matrix[i] = readCoefRow(extMatrixSize);
         }
         return matrix;
     }
@@ -203,6 +190,35 @@ public class ConsoleUserInterface {
                 } else writeln("Enter an integer from " + min + " to " + max);
             } catch (NumberFormatException e) {
                 writeln("Enter an integer from " + min + " to " + max);
+            }
+        }
+    }
+
+    public double[] readCoefRow(int n) {
+        double[] row = null;
+        while (row == null) {
+            String[] inputAsStringList = scanner.nextLine().trim().split("\\s+");
+            if (inputAsStringList.length != n) {
+                writeln("Wrong number of coefficients");
+                continue;
+            }
+            try {
+                row = Stream.of(inputAsStringList).mapToDouble(Double::parseDouble).toArray();
+            } catch (NumberFormatException e) {
+                row = null;
+                writeln("Coefficients must be floating point numbers");
+            }
+        }
+        return row;
+    }
+
+    public double readDouble(String prompt) {
+        writeln(prompt);
+        while (true) {
+            try {
+                return Double.parseDouble(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                writeln("Enter double");
             }
         }
     }

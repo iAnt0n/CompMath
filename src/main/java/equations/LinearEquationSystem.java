@@ -38,7 +38,7 @@ public class LinearEquationSystem {
         this.dim = dim;
     }
 
-    public LinearEquationSystem toTriangleMatrix() {
+    public LinearEquationSystem toTriangularMatrixGaussian() {
 
         LinearEquationSystem triangularMatrix = new LinearEquationSystem(MatrixUtils.copyMatrix(coefficients), constantTerms.clone());
 
