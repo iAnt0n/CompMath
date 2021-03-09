@@ -1,21 +1,7 @@
 import equations.LinearEquationSystem;
 import equations.NumberOfRoots;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYSplineRenderer;
-import org.jfree.chart.ui.RectangleInsets;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 import ui.ConsoleUserInterface;
 
-import javax.swing.*;
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;

@@ -1,22 +1,13 @@
 import nlequations.NonLinearEquations;
 import nlequations.Result;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYSplineRenderer;
-import org.jfree.data.Range;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 import ui.ConsoleUserInterface;
+import ui.PlotUtils;
 
-import javax.swing.*;
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
 
@@ -25,11 +16,12 @@ public class NMain {
         ConsoleUserInterface ui = new ConsoleUserInterface(new BufferedReader(new InputStreamReader(System.in)),
                 new OutputStreamWriter(System.out));
 
-        Function<Double, Double> f = null;
-        ArrayList<Function<double[], Double>> sysFuncs = new ArrayList<>();
-        ArrayList<ArrayList<Function<double[], Double>>> df = new ArrayList<>();
+        DoubleUnaryOperator f = null;
+        String fStr = null;
+        List<Function<double[], Double>> sysFuncs = new ArrayList<>();
+        List<List<Function<double[], Double>>> df = new ArrayList<>();
 
-        ArrayList<DoubleUnaryOperator> sysPlot = new ArrayList<>();
+        DoubleUnaryOperator[] sysPlot = new DoubleUnaryOperator[4];
 
         int option = ui.readChoice(new String[]{
                 "SYSTEM",
@@ -47,63 +39,121 @@ public class NMain {
                 case 0:
                     double[] coefs0 = ui.readCoefRow(4);
                     f = x -> coefs0[0] * Math.pow(x, 3) +
-                        coefs0[1] * Math.pow(x, 2) +
-                        coefs0[2] * x +
-                        coefs0[3];
+                            coefs0[1] * Math.pow(x, 2) +
+                            coefs0[2] * x +
+                            coefs0[3];
+                    fStr = coefs0[0] + "x^3 + " + coefs0[1] + "x^2 + " + coefs0[2] + "x + " + coefs0[3];
                     break;
                 case 1:
                     double[] coefs1 = ui.readCoefRow(3);
                     f = x -> Math.pow(coefs1[0], x) +
                             coefs1[1] * Math.pow(x, 2) +
                             coefs1[2];
+                    fStr = coefs1[0] + "^x + " + coefs1[1] + "x^2 + " + coefs1[2];
                     break;
                 case 2:
                     double[] coefs2 = ui.readCoefRow(2);
-                    f = x -> coefs2[0]*Math.sin(x)+coefs2[1]*Math.cos(x);
+                    f = x -> coefs2[0] * Math.sin(x) + coefs2[1] * Math.cos(x);
+                    fStr = coefs2[0] + "*sin(x) + " + coefs2[1] + "*cos(x)";
                     break;
             }
-        }
-        else {
+        } else {
             int sys = ui.readChoice(new String[]{
-                    "{ y^2 = x^3 + 0.5\n" +
-                    "{ y^2 + x^2 = 1",
-                    ""
+                    "{ 1. y = x^2 + 3x + 1\n" +
+                            "{ 2. 2y = x + 5x^2\n",
+                    "{ 1. sin(x) = yx\n" +
+                            "{ 2. x^2 + y^3 = 4\n",
+                    "{ 1. x^2 + y^2 + z^2 = 1\n" +
+                            "{ 2. 2x^2 + y^2 = 4z\n" +
+                            "{ 3. 3x^2 -4y = -z^2\n"
             }, "Choose an option");
 
-            if (sys==0) {
-                sysPlot.add(x-> Math.sqrt(Math.pow(x, 3)+0.5));
-                sysPlot.add(x-> -Math.sqrt(Math.pow(x, 3)+0.5));
-                sysPlot.add(x-> -Math.sqrt(1-Math.pow(x,2)));
-                sysPlot.add(x-> Math.sqrt(1-Math.pow(x,2)));
+            double eps = ui.readDouble("Enter epsilon:");
 
-                sysFuncs.add(x -> Math.pow(x[1],2)-Math.pow(x[0],3)-0.5);
-                sysFuncs.add(x -> Math.pow(x[0],2)+Math.pow(x[1],2)-1);
+            if (sys == 0) {
+                sysPlot[0] = x -> Math.pow(x, 2) + 3 * x + 1;
+                sysPlot[2] = x -> x / 2 + 5 * Math.pow(x, 2) / 2;
 
-                ArrayList<Function<double[], Double>> eq1d = new ArrayList<>();
-                ArrayList<Function<double[], Double>> eq2d = new ArrayList<>();
-                eq1d.add(x -> -3*Math.pow(x[0],2));
-                eq1d.add(y -> 2*y[1]);
-
-                eq2d.add(x -> 2*x[0]);
-                eq2d.add(y -> 2*y[1]);
-
-                df.add(eq1d);
-                df.add(eq2d);
-            }
-            else if (sys==1){
-                sysFuncs.add(x -> Math.pow(x[1],2)-Math.pow(x[0],3)-0.5);
-                sysFuncs.add(x -> Math.pow(x[0],2)+Math.pow(x[1],2)-1);
+                sysFuncs.add(x -> Math.pow(x[0], 2) + 3 * x[0] + 1 - x[1]);
+                sysFuncs.add(x -> x[0] + 5 * Math.pow(x[0], 2) - 2 * x[1]);
 
                 ArrayList<Function<double[], Double>> eq1d = new ArrayList<>();
                 ArrayList<Function<double[], Double>> eq2d = new ArrayList<>();
-                eq1d.add(x -> -3*Math.pow(x[0],2));
-                eq1d.add(y -> 2*y[1]);
+                eq1d.add(x -> 2 * x[0] + 3);
+                eq1d.add(y -> -1d);
 
-                eq2d.add(x -> 2*x[0]);
-                eq2d.add(y -> 2*y[1]);
+                eq2d.add(x -> 1 + 10 * x[0]);
+                eq2d.add(y -> -2d);
 
                 df.add(eq1d);
                 df.add(eq2d);
+
+                double[] root = NonLinearEquations.systemRootsByNewton(0.5, eps, sysFuncs, df);
+                double rootX = root[0];
+                double rootY = root[1];
+
+                ui.writeln("x = " + rootX);
+                ui.writeln("y = " + rootY);
+                PlotUtils.drawSystem(sysPlot, "y = x^2 + 3x + 1", "2y = x + 5x^2", rootX, rootY);
+
+            } else if (sys == 1) {
+                sysPlot[0] = x -> 10 * Math.asin(x + 0.2) - 10 * x;
+                sysPlot[2] = x -> Math.cbrt(4 - Math.pow(x, 2));
+
+                sysFuncs.add(x -> Math.sin(x[0] + 0.1 * x[1]) - x[0] - 0.2);
+                sysFuncs.add(x -> Math.pow(x[0], 2) + Math.pow(x[1], 3) - 4);
+
+                ArrayList<Function<double[], Double>> eq1d = new ArrayList<>();
+                ArrayList<Function<double[], Double>> eq2d = new ArrayList<>();
+                eq1d.add(x -> -1 + Math.cos(x[0] + x[1] / 10));
+                eq1d.add(y -> Math.cos(y[0] + y[1] / 10) / 10);
+
+                eq2d.add(x -> 2 * x[0]);
+                eq2d.add(y -> 3 * Math.pow(y[1], 2));
+
+                df.add(eq1d);
+                df.add(eq2d);
+
+                double[] root = NonLinearEquations.systemRootsByNewton(0.5, eps, sysFuncs, df);
+                double rootX = root[0];
+                double rootY = root[1];
+
+                ui.writeln("x = " + rootX);
+                ui.writeln("y = " + rootY);
+                PlotUtils.drawSystem(sysPlot, "sin(x+0.1y) - x = 0.2", "x^2 + y^3 = 4", rootX, rootY);
+
+            } else if (sys == 2) {
+                sysFuncs.add(x -> Math.pow(x[0], 2) + Math.pow(x[1], 2) + Math.pow(x[2], 2) - 1);
+                sysFuncs.add(x -> 2 * Math.pow(x[0], 2) + Math.pow(x[1], 2) - 4 * x[2]);
+                sysFuncs.add(x -> 3 * Math.pow(x[0], 2) - 4 * x[1] + Math.pow(x[2], 2));
+
+                List<Function<double[], Double>> eq1d = new ArrayList<>();
+                List<Function<double[], Double>> eq2d = new ArrayList<>();
+                List<Function<double[], Double>> eq3d = new ArrayList<>();
+                eq1d.add(x -> 2 * x[0]);
+                eq1d.add(y -> 2 * y[1]);
+                eq1d.add(z -> 2 * z[2]);
+
+                eq2d.add(x -> 4 * x[0]);
+                eq2d.add(y -> 2 * y[1]);
+                eq2d.add(z -> -4d);
+
+                eq3d.add(x -> 6 * x[0]);
+                eq3d.add(y -> -4d);
+                eq3d.add(z -> 2 * z[2]);
+
+                df.add(eq1d);
+                df.add(eq2d);
+                df.add(eq3d);
+
+                double[] root = NonLinearEquations.systemRootsByNewton(0.5, eps, sysFuncs, df);
+                double rootX = root[0];
+                double rootY = root[1];
+                double rootZ = root[2];
+
+                ui.writeln("x = " + rootX);
+                ui.writeln("y = " + rootY);
+                ui.writeln("z = " + rootZ);
             }
         }
 
@@ -113,141 +163,23 @@ public class NMain {
             double right = ui.readDouble("Enter right border");
             double eps = ui.readDouble("Enter epsilon");
 
-            final XYSeries series1 = new XYSeries("Series 1");
-            for (double i = left-50; i < right+50; i += 0.1) {
-                series1.add(i, f.apply(i));
-            }
-
-            XYSeriesCollection dataset = new XYSeriesCollection();
-
-            dataset.addSeries(series1);
-
-            Result rBisec = NonLinearEquations.rootByBisection(left, right, eps, f);
-            Result rChord = NonLinearEquations.rootByChords(left, right, eps, f);
+            Result rBisec = NonLinearEquations.rootByBisection(f, left, right, eps);
+            Result rChord = NonLinearEquations.rootByChords(f, left, right, eps);
 
             if (rBisec.isValid()) {
-
-                ui.writeln("Bisection: "+ rBisec.getRes());
-                ui.writeln("Chords: "+ rChord.getRes());
-
-                final XYSeries pBisec = new XYSeries("Bisection");
-                pBisec.add(rBisec.getRes(), 0);
-
-                final XYSeries pChord = new XYSeries("Chords");
-                pChord.add(rChord.getRes(), 0);
-
-                dataset.addSeries(pBisec);
-                dataset.addSeries(pChord);
-            }
-
-            else {
+                ui.writeln("Bisection\n" +
+                        "Root: " + rBisec.getRes() + "\n" +
+                        "Iterations: " + rBisec.getIters() + "\n");
+                ui.writeln("Chords\n" +
+                        "Root: " + rChord.getRes() + "\n" +
+                        "Iterations: " + rChord.getIters() + "\n");
+                ui.writeln("The difference between roots is " + Math.abs(rBisec.getRes() - rChord.getRes()));
+            } else {
                 ui.writeln("No roots on your segment");
             }
 
+            PlotUtils.drawPlot(f, fStr, left, right, rBisec.getRes(), rChord.getRes());
 
-            final JFreeChart chart = ChartFactory.createXYLineChart(
-                    "Equation Graph",
-                    null,                        // x axis label
-                    null,                        // y axis label
-                    null,                        // data
-                    PlotOrientation.VERTICAL,
-                    true,                        // include legend
-                    false,                       // tooltips
-                    false                        // urls
-            );
-
-            chart.setBackgroundPaint(Color.WHITE);
-
-            final XYPlot plot = chart.getXYPlot();
-
-            plot.setBackgroundPaint(Color.LIGHT_GRAY);
-
-            plot.getDomainAxis().setRange(left, right);
-            plot.getRangeAxis().setRange(left, right);
-            plot.setDomainZeroBaselineVisible(true);
-            plot.setRangeZeroBaselineVisible(true);
-
-            XYSplineRenderer r0 = new XYSplineRenderer();
-            r0.setSeriesShapesVisible(0, false);
-
-            r0.setSeriesLinesVisible(1, false);
-            r0.setSeriesPaint(1, Color.BLUE);
-            r0.setSeriesLinesVisible(2, false);
-            r0.setSeriesPaint(2, Color.GREEN);
-
-            plot.setDataset(0, dataset);
-
-            // Подключение Spline Renderer к наборам данных
-            plot.setRenderer(r0);
-
-            JFrame jf = new JFrame();
-            jf.setContentPane(new ChartPanel(chart));
-            jf.pack();
-            jf.setVisible(true);
-        }
-        else {
-            ui.writeln(Double.toString(NonLinearEquations.systemRootsByNewton(0.5, 0.001, sysFuncs, df)[0]));
-            ui.writeln(Double.toString(NonLinearEquations.systemRootsByNewton(0.5, 0.001, sysFuncs, df)[1]));
-
-
-            final XYSeries series0 = new XYSeries("Series 1");
-            for (double j = -100; j < 100; j += 0.1) {
-                series0.add(j, sysPlot.get(0).applyAsDouble(j));
-            }
-
-            final XYSeries series1 = new XYSeries("Series 2");
-            for (double j = -100; j < 100; j += 0.1) {
-                series0.add(j, sysPlot.get(1).applyAsDouble(j));
-            }
-            final XYSeries series2 = new XYSeries("Series 3");
-            for (double j = -100; j < 100; j += 0.1) {
-                series0.add(j, sysPlot.get(2).applyAsDouble(j));
-            }
-            final XYSeries series3 = new XYSeries("Series 4");
-            for (double j = -100; j < 100; j += 0.1) {
-                series0.add(j, sysPlot.get(3).applyAsDouble(j));
-            }
-
-            XYSeriesCollection dataset = new XYSeriesCollection();
-
-            dataset.addSeries(series0);
-            dataset.addSeries(series1);
-            dataset.addSeries(series2);
-            dataset.addSeries(series3);
-
-            final JFreeChart chart = ChartFactory.createXYLineChart(
-                    "System Graph",
-                    null,                        // x axis label
-                    null,                        // y axis label
-                    null,                        // data
-                    PlotOrientation.VERTICAL,
-                    true,                        // include legend
-                    false,                       // tooltips
-                    false                        // urls
-            );
-
-            chart.setBackgroundPaint(Color.WHITE);
-
-            final XYPlot plot = chart.getXYPlot();
-
-            plot.setBackgroundPaint(Color.LIGHT_GRAY);
-            plot.getDomainAxis().setRange(-50, 50);
-            plot.getRangeAxis().setRange(-50, 50);
-            plot.setDomainZeroBaselineVisible(true);
-            plot.setRangeZeroBaselineVisible(true);
-
-            XYSplineRenderer r0 = new XYSplineRenderer();
-            r0.setSeriesLinesVisible();
-
-            plot.setDataset(0, dataset);
-
-            // Подключение Spline Renderer к наборам данных
-            plot.setRenderer(r0);
-
-            JFrame jf = new JFrame();
-            jf.setContentPane(new ChartPanel(chart));
-            jf.pack();
-            jf.setVisible(true);
         }
     }
 }

@@ -2,21 +2,22 @@ package nlequations;
 
 import equations.LinearEquationSystem;
 
-import java.util.ArrayList;
+import java.util.List;
+import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
 
 public class NonLinearEquations {
-    public static Result rootByBisection(double left, double right, double eps, Function<Double, Double> f) {
+    public static Result rootByBisection(DoubleUnaryOperator f, double left, double right, double eps) {
         Result r = new Result();
         r.setEps(eps);
 
         int iter = 0;
         double rightInit = right;
 
-        if (f.apply(left) * f.apply(right) > 0) {
+        if (f.applyAsDouble(left) * f.applyAsDouble(right) > 0) {
             right = left;
 
-            while (f.apply(left) * f.apply(right) > 0) {
+            while (f.applyAsDouble(left) * f.applyAsDouble(right) > 0) {
                 right += 0.5;
                 if (right >= rightInit) {
                     r.setValid(false);
@@ -32,7 +33,7 @@ public class NonLinearEquations {
 
             double x = (left + right) / 2;
 
-            if (f.apply(left) * f.apply(x) > 0) {
+            if (f.applyAsDouble(left) * f.applyAsDouble(x) > 0) {
                 left = x;
             } else right = x;
             iter++;
@@ -45,18 +46,18 @@ public class NonLinearEquations {
         return r;
     }
 
-    public static Result rootByChords(double left, double right, double eps, Function<Double, Double> f) {
+    public static Result rootByChords(DoubleUnaryOperator f, double left, double right, double eps) {
         Result r = new Result();
         r.setEps(eps);
 
         int iter = 0;
         double rightInit = right;
 
-        if (f.apply(left) * f.apply(right) > 0) {
+        if (f.applyAsDouble(left) * f.applyAsDouble(right) > 0) {
             right = left;
         }
 
-        while (f.apply(left) * f.apply(right) > 0) {
+        while (f.applyAsDouble(left) * f.applyAsDouble(right) > 0) {
             right += 0.5;
             if (right >= rightInit) {
                 r.setValid(false);
@@ -69,10 +70,10 @@ public class NonLinearEquations {
 
         while (Math.abs(xCur - xPrev) > eps) {
             xPrev = xCur;
-            double x = left - (right - left) / (f.apply(right) - f.apply(left)) * f.apply(left);
+            double x = left - (right - left) / (f.applyAsDouble(right) - f.applyAsDouble(left)) * f.applyAsDouble(left);
             xCur = x;
 
-            if (f.apply(left) * f.apply(x) > 0) {
+            if (f.applyAsDouble(left) * f.applyAsDouble(x) > 0) {
                 left = x;
             } else right = x;
             iter++;
@@ -85,8 +86,8 @@ public class NonLinearEquations {
     }
 
     public static double[] systemRootsByNewton(double start, double eps,
-                                               ArrayList<Function<double[], Double>> f,
-                                               ArrayList<ArrayList<Function<double[], Double>>> fDer) {
+                                               List<Function<double[], Double>> f,
+                                               List<List<Function<double[], Double>>> fDer) {
         double[] x = new double[f.size()];
         double[] fx = new double[f.size()];
         double[] xPrev;
